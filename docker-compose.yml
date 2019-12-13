@@ -1,0 +1,41 @@
+version: "3.7"
+
+services:
+  alluxio-master:
+    image: alluxio/alluxio:2.1.0
+    ports:
+      - "19999:19999"
+      - "19998:19998"
+    networks:
+      - my-overlay
+    environment:
+      - ALLUXIO_MASTER_HOSTNAME=alluxio-master
+    hostname: alluxio-master
+    volumes:
+      - "/opt/alluxio/underFSStorage:/opt/alluxio/underFSStorage"
+      - "/opt/alluxio/conf:/opt/alluxio-2.1.0/conf"
+    command: master
+
+  alluxio-worker1:
+    image: alluxio/alluxio:2.1.0
+    networks:
+      - my-overlay
+    environment:
+      - ALLUXIO_MASTER_HOSTNAME=alluxio-master
+      - ALLUXIO_WORKER_MEMORY_SIZE=1GB
+      - ALLUXIO_RAM_FOLDER=/opt/ramdisk
+    volumes:
+      - "/opt/alluxio/underFSStorage:/opt/alluxio/underFSStorage"
+      - "/opt/alluxio/conf:/opt/alluxio-2.1.0/conf"
+      - "/mnt/ramdisk:/opt/ramdisk"
+    shm_size: '1gb'
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+    command: worker
+
+networks:
+  my-overlay:
+    external: true
+    name: my-overlay
